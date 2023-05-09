@@ -1,2 +1,9 @@
 ---
-# defaults file for template
+
+netplan_package:
+  - netplan.io
+
+netplan_remove_old_configs: false
+
+netplan_config: {}
+

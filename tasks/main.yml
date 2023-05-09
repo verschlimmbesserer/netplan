@@ -1,2 +1,47 @@
 ---
-# tasks file for template
+
+- name: "Install Netplan"
+  ansible.builtin.apt:
+    name: "{{ netplan_package }}"
+    state: latest
+    update_cache: yes
+    cache_valid_time: 3600
+  when: ansible_os_family == 'Debian'
+  register: np
+  until: np is successful
+
+- name: "Remove all not defined netplan configs"
+  block:
+    - name: "Get all files in /etc/netplan"
+      ansible.builtin.find:
+        paths: "/etc/netplan/"
+        recurse: yes
+      register: find
+
+    - name: "Remove all files in /etc/netplan"
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: absent
+      when: not item.path | basename| splitext | first  in netplan_config
+      loop: "{{ find.files }}"
+  when: netplan_remove_old_configs is defined and netplan_remove_old_configs
+
+- name: "Deploy netplan interface config"
+  ansible.builtin.template:
+    src: netplan_config.j2
+    dest: "/etc/netplan/{{ item.key }}.yaml"
+    mode: 0644
+    owner: root
+    group: root
+  loop: "{{ netplan_config | dict2items }}"
+  when: netplan_config != []
+
+
+- name: "Netplan generate config"
+  ansible.builtin.command: netplan generate
+  notify: netplan apply config
+  become: true
+
+- name: "Netplan apply config"
+  ansible.builtin.command: netplan apply
+  when: netplan_apply
