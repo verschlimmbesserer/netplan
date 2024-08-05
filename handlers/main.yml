@@ -1,0 +1,8 @@
+---
+# handlers file for netplan
+- name: Netplan apply
+  ansible.builtin.shell: /usr/sbin/netplan generate && /usr/sbin/netplan apply
+  args:
+    executable: /usr/bin/bash
+  register: netplan_apply
+  changed_when: netplan_apply.rc != 0

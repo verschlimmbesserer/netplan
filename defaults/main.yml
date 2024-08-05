@@ -6,4 +6,3 @@ netplan_package:
 netplan_remove_old_configs: false
 
 netplan_config: {}
-
